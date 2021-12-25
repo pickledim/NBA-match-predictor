@@ -32,6 +32,11 @@ def hp_tuning(df, features, XGB=True):
     X = df[features]
     y = df['W/L_Home']
 
+    assert not(X.isnull().values.any()), 'Nan Values in data'
+
+    case = np.isinf(X).values.sum()
+    assert case is not None, 'Inf Values in data'
+
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=101)
 
     if XGB:

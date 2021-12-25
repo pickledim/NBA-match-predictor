@@ -65,7 +65,7 @@ def get_dummies(data):
     data = pd.concat([data, ven_dummies, team_dummies, op_dummies], axis=1)
 
     data['PTS'] = data['PTS_Home'] + data['PTS_Away']
-    data = data.apply(pd.to_numeric, errors='ignore')
+
 
     return data
 
@@ -208,8 +208,6 @@ def feature_eng(data):
                       + 0.7 * data['OREB_Away'] + 0.3 * data['DREB_Away'] + data['STL_Away'] + 0.7 * data[
                           'AST_Away'] - 0.4 * data['PF_Away'] - data['TOV_Away']
 
-    data.fillna(0, inplace=True)
-
     return data
 
 
@@ -248,3 +246,12 @@ def check_dir(directory):
 
     else:
         print(dir_path, "folder already exists.")
+
+
+def clean_data(data):
+
+    data = data.apply(pd.to_numeric, errors='ignore')
+    data.replace([np.inf, -np.inf], np.nan, inplace=True)
+    data = data.fillna(0)
+
+    return data

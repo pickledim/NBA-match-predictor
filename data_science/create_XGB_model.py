@@ -18,9 +18,16 @@ def xgb_model(features, params, df, model_name):
         }
 
     df['W/L_Home'] = df['W/L_Home'].map(traduction)
-    X = np.array(df[features])
+
+    X = df[features]
     y = np.array(df['W/L_Home'])
 
+    assert not(X.isnull().values.any()), 'Nan Values in data'
+
+    case = np.isinf(X).values.sum()
+    assert case is not None, 'Inf Values in data'
+
+    X = np.array(X)
     X_k, X_val, y_k, y_val = train_test_split(X, y, test_size=0.1, random_state=42)
 
     kf = KFold(n_splits=10)

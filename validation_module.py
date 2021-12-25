@@ -40,6 +40,10 @@ scaler = Tools.load_pickle('./ml_models/x_scaler')
 
 df = data[features]
 
+assert not(df.isnull().values.any()), 'Nan Values in data'
+case = np.isinf(df).values.sum()
+assert case is not None, 'Inf Values in data'
+
 X = np.array(df)
 
 y_pred_xgb = xgb_model.predict(X)
@@ -77,12 +81,12 @@ errors_prob = {}
 correct_prob = {}
 
 threshold = 0.7
-cond = y_pred_series == 'W'
-y = y_pred_series[cond]
+# cond = y_pred_series == 'W'
+y = y_pred_series#[cond]
 
 for i, res in enumerate(y):
-    if y_pred_nn[i] != y_val[i] and (max(y_prob_nn[i]) >= 0.9):
+    if y_pred_nn[i] != y_val[i] and (max(y_prob_nn[i]) >= 0.91):
         errors_prob[i] = max(y_prob_nn[i]), y_pred_series.loc[i]
     elif y_pred_nn[i] == y_val[i] and (max(y_prob_nn[
-                                               i]) >= 0.9):
+                                               i]) >= 0.91):
         correct_prob[i] = max(y_prob_nn[i]), y_pred_series.loc[i]

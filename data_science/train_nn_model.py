@@ -13,8 +13,15 @@ def mlp_model(df, features, mlp_name, params, scaler_name):
         }
 
     df['W/L_Home'] = df['W/L_Home'].map(traduction)
-    X = np.array(df[features])
-    X[X == +np.inf] = 0
+
+    X = df[features]
+
+    assert not(X.isnull().values.any()), 'Nan Values in data'
+
+    case = np.isinf(X).values.sum()
+    assert case is not None, 'Inf Values in data'
+
+    X = np.array(X)
 
     scaler = MinMaxScaler()
     scaler.fit(X)
