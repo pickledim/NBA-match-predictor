@@ -21,7 +21,7 @@ if pre_pros:
     data = algorithms.concat_home_away_stats(data)
     data = algorithms.get_dummies(data)
     data = algorithms.feature_eng(data)
-
+    data = algorithms.clean_data(data)
     data.to_csv('validation_data_2021.csv')
 else:
     data = pd.read_csv('../validation_data_2021.csv', index_col=0)
@@ -77,16 +77,25 @@ inv_map = {v: k for k, v in mapp.items()}
 y_pred_series = pd.Series(y_pred_nn)
 y_pred_series = y_pred_series.map(inv_map)
 
-errors_prob = {}
-correct_prob = {}
+y_pred_series2 = pd.Series(y_pred_xgb)
+y_pred_series2 = y_pred_series2.map(inv_map)
 
-threshold = 0.7
-# cond = y_pred_series == 'W'
-y = y_pred_series#[cond]
+data['xgb_pred'] = y_pred_series2
+data['xgb_prob'] = y_prob_xgb.max(axis=1)
+data['nn_pred'] = y_pred_series
+data['nn_prob'] = y_prob_nn.max(axis=1)
 
-for i, res in enumerate(y):
-    if y_pred_nn[i] != y_val[i] and (max(y_prob_nn[i]) >= 0.91):
-        errors_prob[i] = max(y_prob_nn[i]), y_pred_series.loc[i]
-    elif y_pred_nn[i] == y_val[i] and (max(y_prob_nn[
-                                               i]) >= 0.91):
-        correct_prob[i] = max(y_prob_nn[i]), y_pred_series.loc[i]
+results = data[['TEAM_Home', 'TEAM_Away', 'DATE_Home', 'xgb_pred', 'xgb_prob', 'nn_pred', 'nn_prob', 'W/L_Home']]
+threshold = 0.5
+
+mask1 = (data['nn_prob'] >= threshold) & (data['nn_prob'] >= 0.58)
+results_mlp = results[mask1]
+mask = results['W/L_Home'] == data['nn_pred']
+results_mlp_corr = results_mlp[mask]
+results_mlp_err = results_mlp[~mask]
+
+mask2 = data['xgb_prob'] >= threshold
+mask = results['W/L_Home'] == data['xgb_pred']
+results_xgb = results[mask2]
+results_xgb_corr = results_xgb[mask]
+results_xgb_err = results_xgb[~mask]
