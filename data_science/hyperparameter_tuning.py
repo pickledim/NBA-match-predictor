@@ -61,7 +61,7 @@ def hp_tuning(df, features, XGB=True):
         }
         model = xgb.XGBClassifier(objective='binary:logistic')
 
-        save_as = 'params_from_ht_rs_xgb'
+        save_as = 'params_from_ht_rs_xgb_test'
     else:
         # =============================================================================
         # Random Forest
