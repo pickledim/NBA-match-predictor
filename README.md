@@ -10,3 +10,5 @@ Steps
 2. Run Get_Validation_Data.ipynb  
 2. Run Keras.ipynb or ml_models.py to create the models
 3. Run Game_Analysis_Season_2022_23.ipynb 
+
+#### Important Remark: for scrapping you have to go to src/stats_scraper and change the user-agent in the browser dictionary with the appropriate one of your OS

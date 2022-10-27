@@ -11,6 +11,15 @@ import pandas as pd
 
 
 def web_scraper(output_file, training_dataset=False, **kwargs):
+    """
+    Scrappes the matches from nba.stats works for live scrapping as well as for static scrapping
+
+    :param output_file: str Directory to save the results
+    :param training_dataset: boolean specifies if it is for live or static scrapping
+    :param kwargs: dict dictionary that specifies the dates and season of the wanted dataset
+
+    :return: pd.DataFrame the wanted dataset
+    """
 
     browser = {
         'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome'

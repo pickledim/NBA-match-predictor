@@ -6,6 +6,13 @@ from src import stats_scraper
 
 
 def pre_process_cols(data, training_dataset=False):
+    """
+    Keeps only the useful columns and renames them
+
+    :param data: pd.DataFrame dataset
+    :param training_dataset: boolean checks if it is for training or for live scrapping
+    :return: pd.DataFrame dataset with modified columns
+    """
 
     venue = []
     opp = []
@@ -95,8 +102,12 @@ def pre_process_cols(data, training_dataset=False):
 
 
 def hollinger_formula(data):
+    """
+    Creates a column that evaluates the team - basketball on paper Hollinger formula
+    :param data: pd.DataFrame dataset
+    :return: pd.DataFrame dataset
+    """
 
-    # basketball on paper Hollinger formula
     data['VALUE'] = data['PTS'] + 0.79 * data['AST'] + 0.85 * data['OREB'] + \
                     0.35 * data['DREB'] + 1.2 * data['STL'] + 0.85 * data['BLK'] \
                     - 0.85 * (data['FGA'] - data['FGM']) - 0.45 * (data['FTA'] - data['FTM']) - \
@@ -105,11 +116,22 @@ def hollinger_formula(data):
 
 
 def concat_home_away_stats(df):
-    """Returns a df in which each match has all the data of Home and Away Teams"""
+    """
+    Returns a df in which each match has all the data of Home and Away Teams
+
+    :param df: pd.DataFrame dataset
+    :return: pd.DataFrame dataset
+    """
 
     def concat_stats(data, list_df):
-        """For each date finds the rows where the home team is the corresponding away team
-            of the same match and concateantes the stats"""
+        """
+        For each date finds the rows where the home team is the corresponding away team
+            of the same match and concatenates the stats
+        :param data: pd.DataFrame rows grouped by date of the dataset
+        :param list_df: list empty list that will store the data batches
+        :return: pd.DataFrame rows grouped by date of the dataset with data form home & away teams
+        """
+
         for i, row in data.iterrows():
             cond = (data.loc[:, 'TEAM'].isin([row['OPPONENT']]))  # and (tmp_df.loc[:,'GAME'].isin([row['TEAM']]))
             tmp_df = data[cond]
@@ -135,6 +157,11 @@ def concat_home_away_stats(df):
 
 
 def get_dummies(data):
+    """
+    Creates dummie columns for all the teams for Home and Away categories
+    :param data: pd.DataFrame dataset
+    :return: pd.DataFrame dataset with the dummie columns
+    """
 
     team_dummies = pd.get_dummies(data.TEAM_Home, prefix='team').astype(int)
     ven_dummies = pd.get_dummies(data.VENUE_Home, prefix='venue').astype(int)
@@ -147,6 +174,11 @@ def get_dummies(data):
 
 
 def feature_eng(data):
+    """
+    Creates features taken from Basketball on paper book
+    :param data: pd.DataFrame dataset
+    :return: pd.DataFrame dataset
+    """
 
     data['POSSESION_Home'] = 0.96 * (
             data['FGA_Home'] - data['OREB_Home'] + data['TOV_Home'] + 0.44 * data['FTA_Home'])
@@ -288,6 +320,10 @@ def feature_eng(data):
 
 
 def get_data_from_2015():
+    """
+    Scrappes all the matches played on Regular Season from 2015 up to 2021
+    :return: pd.DataFrame dataset
+    """
 
     kwargs = {'DateFrom': '',
               'DateTo': ''}
@@ -305,6 +341,12 @@ def get_data_from_2015():
 
 
 def check_dir(directory):
+    """
+    Checks if the directory given exists and if not it creates it
+
+    :param directory: str of the wanted directory
+    :return:
+    """
 
     dir_path = os.path.dirname(os.path.realpath(directory))
     check_folder = os.path.isdir(dir_path)
@@ -319,6 +361,12 @@ def check_dir(directory):
 
 
 def clean_data(data):
+    """
+    Replaces infinty and nan values with zero
+
+    :param data: pd.DataFrame dataset
+    :return: pd.DataFrame dataset
+    """
 
     data = data.apply(pd.to_numeric, errors='ignore')
     data.replace([np.inf, -np.inf], np.nan, inplace=True)
