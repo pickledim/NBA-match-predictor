@@ -1,21 +1,28 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Created on Tue Oct 25 21:46:02 2022
+
+@author: dimitrisglenis
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
 Created on Sun Feb 21 14:08:31 2021
 
 @author: dimitrisglenis
 """
 
-import pandas as pd
-import numpy as np
-from src import algorithms, stats_scraper
 import datetime
-from stoiximan_screenshot import get_screenshot
 import pandas as pd
 import numpy as np
-from src import Data_analysis_tools as Tools
-import telegram_bot_nba as tbn
 from keras.models import load_model
+import os
+
+from src import algorithms, stats_scraper
+from src import Data_analysis_tools as Tools
+# import telegram_bot_nba as tbn
 
 
 def name_mapping(abbr):
@@ -57,6 +64,7 @@ def name_mapping(abbr):
 
 
 def get_results(df, results, y_pred_mlp, y_proba_mlp, imap, send_message=False):
+
     min_bet = 2.5
     max_bet = 5
 
@@ -66,10 +74,12 @@ def get_results(df, results, y_pred_mlp, y_proba_mlp, imap, send_message=False):
     cond = coefs['clusters'] == results['clusters'].unique()[0]
     accuracy = coefs['Accuracy'][cond].iloc[0]
     print(f'Accuracy: {accuracy}')
+
     if accuracy == 1.:
-        print("\n ALL IN!\n")
+
+        print("\nALL IN!\n")
         # get_screenshot(f'{TEAM1}vs{TEAM2}')
-        send_message = True
+        
         message1 = f"{name_mapping(df['TEAM_Home'].iloc[0])} - {name_mapping(df['TEAM_Away'].iloc[0])} "
         message2 = f"{name_mapping(df['TEAM_Away'].iloc[0])} \n"
         message3 = f"{round(100, 2)}\n"
@@ -77,13 +87,13 @@ def get_results(df, results, y_pred_mlp, y_proba_mlp, imap, send_message=False):
         message5 = f"MLP Proba: {round((1 - y_proba_mlp[0]), 3)} "
         message6 = f"\nClustering Method Proba: {round(accuracy, 2)}"
         message = message1 + message2 + message3 + message4 + message5 + message6
-    elif accuracy >= 0.83:
-        x = [0.83, coefs['Accuracy'].max()]
+    elif accuracy >= 0.75:
+
+        x = [0.75, coefs['Accuracy'].max()]
         y = [min_bet, max_bet]
         bet = np.interp(accuracy, x, y)
-        print(f"\n BET {round(bet,2)}e!")
-
-        send_message = True
+        print(f"\nBET {round(bet,2)} euros")
+        
         message1 = f"{name_mapping(df['TEAM_Home'].iloc[0])} - {name_mapping(df['TEAM_Away'].iloc[0])} "
         message2 = f"{name_mapping(df['TEAM_Away'].iloc[0])} \n"
         message3 = f"{round(bet, 2)}\n"
@@ -92,11 +102,12 @@ def get_results(df, results, y_pred_mlp, y_proba_mlp, imap, send_message=False):
         message6 = f"\nClustering Method Proba: {round(accuracy, 2)}"
         message = message1 + message2 + message3 + message4 + message5 + message6
     else:
+
         print("\nFuck it don't bet\n")
         x = [coefs['Accuracy'].min(), coefs['Accuracy'].max()]
         y = [min_bet, max_bet]
         bet = np.interp(accuracy, x, y)
-        send_message = True
+        send_message = False
         message1 = f"{name_mapping(df['TEAM_Home'].iloc[0])} - {name_mapping(df['TEAM_Away'].iloc[0])} "
         message2 = f"{name_mapping(df['TEAM_Away'].iloc[0])} \n"
         message3 = f"\n{round(bet, 2)}\n"
@@ -105,14 +116,21 @@ def get_results(df, results, y_pred_mlp, y_proba_mlp, imap, send_message=False):
         message6 = f"\nClustering Method Proba: {round(accuracy, 2)}"
         message = message1 + message2 + message3 + message4 + message5 + message6
 
-    if send_message:
-        tbn.send_message(message)
+    # if send_message:
+    #     tbn.send_message(message)
     return
 
 
-def predict_match(d1, day, month, live, TEAM1, TEAM2):
-    date = f'{day}_{month}'
-    # date in yyyy/mm/dd/hh/mm format
+def predict_match(d1, live, TEAM1, TEAM2, DateFrom, DateTo, Season, send_message):
+    
+    kwargs = {'DateFrom': DateFrom,
+              'DateTo': DateTo,
+              'Season': Season}
+    
+    date = DateFrom.replace('/', '_')
+
+    output = os.path.join(os.getcwd(), 'TeamsBoxScore', date, f'boxscore_{TEAM1}vs{TEAM2}.csv')
+    algorithms.check_dir(output)
 
     cont = True
     # =============================================================================
@@ -122,31 +140,9 @@ def predict_match(d1, day, month, live, TEAM1, TEAM2):
         d2 = datetime.datetime.now()
         if d2 >= d1:
             if live:
-                if day >= 10 and month >= 10:
-                    url = f'https://www.nba.com/stats/teams/boxscores/?Season=2021-22&SeasonType=Regular%20Season&' \
-                          f'DateFrom={month}%2F{day}%2F2022' # &DateTo={month}%2F{day}%2F2022
-
-                else:
-                    url = f'https://www.nba.com/stats/teams/boxscores/?Season=2021-22&SeasonType=Regular%20Season&' \
-                          f'DateFrom=0{month}%2F{day}%2F2022' #&DateTo={month}%2F{day}%2F2022
-
-                data = stats_scraper.web_scraper(url, f'teams_boxscore_trad_{date}_first_half.csv', boolean=False,
-                                                  boxscore=True, teams=True, live=live)
+                data = stats_scraper.web_scraper(output, training_dataset=False, **kwargs)
             else:
-                if day >= 10 and month >= 10:
-                    url = f'https://www.nba.com/stats/teams/boxscores-traditional/?Season=2021-22&SeasonType=Regular%20' \
-                          f'Season&GameSegment%27%20%5C%20%27=First%20Half&DateFrom={month}%2F{day}%2F2022&' \
-                          f'& DateTo={month}%2F{day}%2F2022&GameSegment=First%20Half'
-
-
-                else:
-                    url = f'https://www.nba.com/stats/teams/boxscores-traditional/?Season=2021-22&SeasonType=Regular%20' \
-                          f'Season&GameSegment%27%20%5C%20%27=First%20Half&DateFrom=0{month}%2F0{day}%2F2022&' \
-                          f'& DateTo={month}%2F{day}%2F2022&GameSegment=First%20Half'
-                data = stats_scraper.web_scraper(url, f'teams_boxscore_trad_{date}_first_half.csv', boolean=False,
-                                                  boxscore=True, teams=True, live=live)
-
-            data = pd.read_csv(f'teams_boxscore_trad_{date}_first_half.csv', index_col=0)  # Attention to the path
+                data = pd.read_csv(output, index_col=0)
 
             data = algorithms.pre_process_cols(data)
             data = algorithms.hollinger_formula(data)
@@ -203,8 +199,8 @@ def predict_match(d1, day, month, live, TEAM1, TEAM2):
     cond = y_proba_mlp >= 0.5
     y_pred_mlp = np.where(cond, 1, 0)
 
-    print('\nDL MLP y all!!!')
-    print(data1['TEAM_Home'].iloc[0], imap[y_pred_mlp[0]], y_proba_mlp[0])
+    # print('\nDL MLP y all!!!')
+    print(data1['TEAM_Home'].iloc[0], imap[y_pred_mlp[0]]) # , y_proba_mlp[0]
 
     data1['nn_pred'] = imap[y_pred_mlp[0]]
     data1['nn_prob'] = y_proba_mlp[0]
@@ -213,7 +209,7 @@ def predict_match(d1, day, month, live, TEAM1, TEAM2):
     results1['clusters'] = kmeans.predict(np.array(results1['nn_prob']).reshape(-1, 1))
 
     if imap[y_pred_mlp[0]] == 'Loss':
-        get_results(data1, results1, y_pred_mlp, y_proba_mlp, imap)
+        get_results(data1, results1, y_pred_mlp, y_proba_mlp, imap, send_message)
         return
 
     # =============================================================================
@@ -235,8 +231,8 @@ def predict_match(d1, day, month, live, TEAM1, TEAM2):
     cond = y_proba_mlp2 >= 0.5
     y_pred_mlp2 = np.where(cond, 1, 0)
 
-    print('\nDL MLP y all!!!')
-    print(data2['TEAM_Home'].iloc[0], imap[y_pred_mlp2[0]], y_proba_mlp2[0])
+    # print('\nDL MLP y all!!!')
+    print(data2['TEAM_Home'].iloc[0], imap[y_pred_mlp2[0]], )  # 1 - y_proba_mlp2[0]
 
     data2['nn_pred'] = imap[y_pred_mlp2[0]]
     data2['nn_prob'] = y_proba_mlp2[0]
@@ -245,9 +241,7 @@ def predict_match(d1, day, month, live, TEAM1, TEAM2):
     results2['clusters'] = kmeans.predict(np.array(results2['nn_prob']).reshape(-1, 1))
 
     if imap[y_pred_mlp2[0]] == 'Loss':
-        get_results(data2, results2, y_pred_mlp2, y_proba_mlp2, imap)
-
-    # system(f'say Dude you have predictions for the match {TEAM1} vs {TEAM2} ')
+        get_results(data2, results2, y_pred_mlp2, y_proba_mlp2, imap, send_message)
 
 
 if __name__ == "__main__":
@@ -255,12 +249,15 @@ if __name__ == "__main__":
     # inputs
     # =============================================================================
 
-    day = 13
-    month = 3
+    live_ = True
 
-    live = True
-    TEAM1 = 'BOS'
-    TEAM2 = 'DAL'
+    TEAM1_ = 'LAC'
+    TEAM2_ = 'OKC'
+
+    DateFrom_ = DateTo_ = '25/10/2022'  # dd/mm/yyyy
+    season_ = '2022-23'
+
     # date in yyyy/mm/dd/hh/mm format
-    d1 = datetime.datetime(2022, 3, 13, 21, 43)
-    predict_match(d1, day, month, live, TEAM1, TEAM2)
+    d1_ = datetime.datetime(2021, 12, 26, 2, 15)
+
+    predict_match(d1_, live_, TEAM1_, TEAM2_, DateFrom_, DateTo_, season_, send_message=False)

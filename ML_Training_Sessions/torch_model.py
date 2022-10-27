@@ -7,7 +7,7 @@ from sklearn.decomposition import PCA
 
 features = Tools.load_pickle('./ml_models/features_for_prediction_new')
 
-data = pd.read_csv('validation_data_first_half_2015_2021.csv', index_col=0)
+data = pd.read_csv('../misc_data/validation_data_first_half_2015_2021.csv', index_col=0)
 
 traduction = {
         'W': 1,

@@ -14,7 +14,7 @@ if pre_pros:
         data = stats_scraper.web_scraper2_0(url, f'teams_boxscore_trad_2021_first_half.csv', boolean=True, boxscore=True,
                                             teams=True, live=False)
     else:
-        data = pd.read_csv('teams_boxscore_trad_2021_first_half.csv', index_col=0)
+        data = pd.read_csv('misc_data/teams_boxscore_trad_2021_first_half.csv', index_col=0)
 
     data = algorithms.pre_process_cols(data)
     data = algorithms.hollinger_formula(data)
@@ -24,7 +24,7 @@ if pre_pros:
     data = algorithms.clean_data(data)
     data.to_csv('validation_data_2021.csv')
 else:
-    data = pd.read_csv('validation_data_2021.csv', index_col=0)
+    data = pd.read_csv('misc_data/validation_data_2021.csv', index_col=0)
 
 # =============================================================================
 # predict
