@@ -1,18 +1,95 @@
 import pandas as pd
 import numpy as np
-from src import stats_scraper
 import os
 
+from src import stats_scraper
 
-def pre_process_cols(data):
 
-    venue = {
+def pre_process_cols(data, training_dataset=False):
+
+    venue = []
+    opp = []
+    for i, row in data.MATCHUP.str.split(' ').iteritems():
+        venue.append(row[1])
+        opp.append(row[2])
+
+    venue_map = {
         'vs.': 'Home',
         '@': "Away"
     }
-    data.rename(columns={'GAME': 'OPPONENT', 'UP': 'VENUE'}, inplace=True)
-    data['VENUE'] = data.VENUE.map(venue)
-    data.drop(['MATCH'], axis=1, inplace=True)
+
+    data.drop(['MATCHUP'], axis=1, inplace=True)
+    data['OPPONENT'] = opp
+    data['VENUE'] = venue
+    data['VENUE'] = data.VENUE.map(venue_map)
+    if training_dataset:
+
+        drop = ['SEASON_YEAR',
+                'BLKA',
+                'PFD',
+                'TEAM_ID',
+                'TEAM_NAME',
+                'GAME_ID',
+                'GP_RANK',
+                'W_RANK',
+                'L_RANK',
+                'W_PCT_RANK',
+                'MIN_RANK',
+                'FGM_RANK',
+                'FGA_RANK',
+                'FG_PCT_RANK',
+                'FG3M_RANK',
+                'FG3A_RANK',
+                'FG3_PCT_RANK',
+                'FTM_RANK',
+                'FTA_RANK',
+                'FT_PCT_RANK',
+                'OREB_RANK',
+                'DREB_RANK',
+                'REB_RANK',
+                'AST_RANK',
+                'TOV_RANK',
+                'STL_RANK',
+                'BLK_RANK',
+                'BLKA_RANK',
+                'PF_RANK',
+                'PFD_RANK',
+                'PTS_RANK',
+                'PLUS_MINUS_RANK']
+    else:
+
+        drop = ['TEAM_ID',
+                'TEAM_NAME',
+                'GAME_ID']
+
+    mapper = {'TEAM_ABBREVIATION': 'TEAM',
+              'VENUE': 'VENUE',
+              'OPPONENT': 'OPPONENT',
+              'GAME_DATE': 'DATE',
+              'WL': 'W/L',
+              'MIN': 'MIN',
+              'PTS': 'PTS',
+              'FGM': 'FGM',
+              'FGA': 'FGA',
+              'FG_PCT': 'FG%',
+              'FG3M': '3PM',
+              'FG3A': '3PA',
+              'FG3_PCT': '3P%',
+              'FTM': 'FTM',
+              'FTA': 'FTA',
+              'FT_PCT': 'FT%',
+              'OREB': 'OREB',
+              'DREB': 'DREB',
+              'REB': 'REB',
+              'AST': 'AST',
+              'TOV': 'TOV',
+              'STL': 'STL',
+              'BLK': 'BLK',
+              'PF': 'PF',
+              'PLUS_MINUS': '+/-'}
+
+    data.drop(drop, axis=1, inplace=True)
+    data.rename(columns=mapper, inplace=True)
 
     return data
 
@@ -65,7 +142,6 @@ def get_dummies(data):
     data = pd.concat([data, ven_dummies, team_dummies, op_dummies], axis=1)
 
     data['PTS'] = data['PTS_Home'] + data['PTS_Away']
-
 
     return data
 
@@ -213,23 +289,17 @@ def feature_eng(data):
 
 def get_data_from_2015():
 
+    kwargs = {'DateFrom': '',
+              'DateTo': ''}
+
     list_df = []
     for i in range(15, 21):
-        if i < 9:
-            url = f'https://www.nba.com/stats/teams/boxscores-traditional/?Season=200{i}-0{i + 1}' \
-                  f'&SeasonType=Regular%20Season&GameSegment=First%20Half'
-        elif i == 9:
-            url = f'https://www.nba.com/stats/teams/boxscores-traditional/?Season=200{i}-{i + 1}' \
-                  f'&SeasonType=Regular%20Season&GameSegment=First%20Half'
-        else:
-            url = f'https://www.nba.com/stats/teams/boxscores-traditional/?Season=20{i}-{i + 1}' \
-                  f'&SeasonType=Regular%20Season&GameSegment=First%20Half'
-
-        tmp_df = stats_scraper.web_scraper(url, f'teams_boxscore_trad_2k{i}_first_half.csv', boolean=True,
-                                           boxscore=True,
-                                           teams=True)
+        kwargs['Season'] = f'20{i:02}-{i+1:02}'
+        print(f'Getting data from Season: {kwargs["Season"]}')
+        tmp_df = stats_scraper.web_scraper(f'./new_data/teams_boxscore_trad_2k{i}_first_half.csv',
+                                                 training_dataset=True, **kwargs)
         list_df.append(tmp_df)
-    data = pd.concat(list_df, axis=0)
+    data = pd.concat(list_df, axis=0, ignore_index=True)
 
     return data
 
@@ -255,3 +325,8 @@ def clean_data(data):
     data = data.fillna(0)
 
     return data
+
+
+
+
+

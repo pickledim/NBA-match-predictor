@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import confusion_matrix
 from src import algorithms, Data_analysis_tools as Tools, stats_scraper
-
+import joblib
 pre_pros = True
 scrap = True
 
@@ -11,8 +11,8 @@ url = 'https://www.nba.com/stats/teams/boxscores-traditional/?Season=2021-22&Sea
 
 if pre_pros:
     if scrap:
-        data = stats_scraper.web_scraper(url, f'teams_boxscore_trad_2021_first_half.csv', boolean=True, boxscore=True,
-                                         teams=True, live=False)
+        data = stats_scraper.web_scraper2_0(url, f'teams_boxscore_trad_2021_first_half.csv', boolean=True, boxscore=True,
+                                            teams=True, live=False)
     else:
         data = pd.read_csv('teams_boxscore_trad_2021_first_half.csv', index_col=0)
 
@@ -40,6 +40,8 @@ mlp_model = Tools.load_pickle('./ml_models/MLP_model')
 
 scaler = Tools.load_pickle('./ml_models/x_scaler')
 
+scaler_filename = "./ml_models/scaler.save"
+joblib.dump(scaler, scaler_filename)
 df = data[features]
 
 assert not(df.isnull().values.any()), 'Nan Values in data'
