@@ -6,6 +6,7 @@ This package is used to scrap the statistics of the first half of matches, analy
 
 Steps
 
-1. Run get_training_data.py to scrap the data
-2. run ml_models.py to create the models
-3. run validation_module.py 
+1. Run Get_Training_Data.ipynb 
+2. Run Get_Validation_Data.ipynb  
+2. Run Keras.ipynb or ml_models.py to create the models
+3. Run Game_Analysis_Season_2022_23.ipynb 

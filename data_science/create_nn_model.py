@@ -19,6 +19,7 @@ def train_mlp(df, features):
         }
 
     df['W/L_Home'] = df['W/L_Home'].map(traduction)
+
     X = df[features]
 
     assert not(X.isnull().values.any()), 'Nan Values in data'
@@ -27,9 +28,6 @@ def train_mlp(df, features):
     assert case is not None, 'Inf Values in data'
 
     X = np.array(X)
-    # X[X == +inf] = 0
-
-
 
     y = np.array(df['W/L_Home'])
 
