@@ -22,9 +22,15 @@ def web_scraper(output_file, training_dataset=False, **kwargs):
     """
 
     browser = {
-        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome'
-                      '/102.0.5005.61 Safari/537.36',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                      'Chrome/108.0.0.0 Safari/537.36',
         'Referer': 'https://www.nba.com/'}
+
+    if 'GameSegment' not in list(kwargs.keys()):
+        kwargs['GameSegment'] = 'First Half'
+        _entire = False
+    else:
+        _entire = True
 
     if kwargs['DateFrom'] == '' and kwargs['DateTo'] == '':
 
@@ -49,7 +55,7 @@ def web_scraper(output_file, training_dataset=False, **kwargs):
 
         payload = {'DateFrom': kwargs['DateFrom'],
                     'DateTo': kwargs['DateTo'],
-                    'GameSegment': 'First Half',
+                    'GameSegment': kwargs['GameSegment'],
                     'LastNGames': '0',
                     'LeagueID': '00',
                     'Location': '',
@@ -81,6 +87,13 @@ def web_scraper(output_file, training_dataset=False, **kwargs):
                   f'MeasureType=Base&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PaceAdjust=N&PerMode=Totals&Period' \
                   f'=0&PlusMinus=N&Rank=N&Season={kwargs["Season"]}&SeasonSegment=&SeasonType=Regular%20Season&Shot' \
                   f'ClockRange=&VsConference=&VsDivision='
+
+        if _entire:
+            url = f"https://stats.nba.com/stats/teamgamelogs?DateFrom=&DateTo=&GameSegment=&LastNGames=0&LeagueID=00&" \
+                  f"Location=&MeasureType=Base&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PaceAdjust=N&PerMode=" \
+                  f"Totals&Period=0&PlusMinus=N&Rank=N&Season={kwargs['Season']}&SeasonSegment=&SeasonType=" \
+                  f"Regular Season&ShotClockRange=&VsConference=&VsDivision="
+
 
     else:
 

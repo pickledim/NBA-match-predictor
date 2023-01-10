@@ -5,6 +5,26 @@ import os
 from src import stats_scraper
 
 
+def check_dir(directory):
+    """
+    Checks if the directory given exists and if not it creates it
+
+    :param directory: str of the wanted directory
+    :return:
+    """
+
+    dir_path = os.path.dirname(os.path.realpath(directory))
+    check_folder = os.path.isdir(dir_path)
+
+    # If folder doesn't exist, then create it.
+    if not check_folder:
+        os.makedirs(dir_path)
+        print("created folder : ", dir_path)
+
+    else:
+        print(dir_path, "folder already exists.")
+
+
 def pre_process_cols(data, training_dataset=False):
     """
     Keeps only the useful columns and renames them
@@ -332,32 +352,13 @@ def get_data_from_2015():
     for i in range(15, 21):
         kwargs['Season'] = f'20{i:02}-{i+1:02}'
         print(f'Getting data from Season: {kwargs["Season"]}')
-        tmp_df = stats_scraper.web_scraper(f'./new_data/teams_boxscore_trad_2k{i}_first_half.csv',
-                                                 training_dataset=True, **kwargs)
+        _name = os.path.join(os.getcwd(), 'new_data', f'teams_boxscore_trad_2k{i}_first_half.csv')
+        check_dir(_name)
+        tmp_df = stats_scraper.web_scraper(_name, training_dataset=True, **kwargs)
         list_df.append(tmp_df)
     data = pd.concat(list_df, axis=0, ignore_index=True)
 
     return data
-
-
-def check_dir(directory):
-    """
-    Checks if the directory given exists and if not it creates it
-
-    :param directory: str of the wanted directory
-    :return:
-    """
-
-    dir_path = os.path.dirname(os.path.realpath(directory))
-    check_folder = os.path.isdir(dir_path)
-
-    # If folder doesn't exist, then create it.
-    if not check_folder:
-        os.makedirs(dir_path)
-        print("created folder : ", dir_path)
-
-    else:
-        print(dir_path, "folder already exists.")
 
 
 def clean_data(data):
